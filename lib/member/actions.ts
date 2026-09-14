@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getActiveUserWithRole } from "@/lib/auth/session";
+import { sendChildQrEmail } from "@/lib/email/qr-email";
 import { isStationSatisfied } from "@/lib/auth/station";
 import { STATION_REQUIRED_PATH } from "@/lib/auth/station-policy";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -158,10 +159,15 @@ export async function createChildAction(_prev: FormState, formData: FormData): P
     return { status: "error", message: "Could not add the child. Please try again.", values };
   }
 
-  // Phase 5: send the QR email here when the guardian has an email.
+  // QR delivery when an email is on file; failure never fails the add (spec §33).
+  let emailStatus: "sent" | "failed" | "none" = "none";
+  if (user.profile.email) {
+    const outcome = await sendChildQrEmail(child.id);
+    emailStatus = outcome.status === "sent" ? "sent" : "failed";
+  }
 
   revalidatePath(MEMBER_PATH, "layout");
-  redirect(`/member/children/${child.id}?created=1`);
+  redirect(`/member/children/${child.id}?created=1&email=${emailStatus}`);
 }
 
 export async function updateChildAction(
@@ -201,4 +207,36 @@ export async function updateChildAction(
 
   revalidatePath(MEMBER_PATH, "layout");
   redirect(`/member/children/${childId}?updated=1`);
+}
+
+/** Re-sends the existing QR (never a new one) to the guardian's email on file. */
+export async function resendQrEmailAction(childId: string): Promise<FormState> {
+  const user = await requireMemberOnStation();
+  if (!user.profile.email) {
+    return { status: "error", message: "No email address on file. Add one under My Profile." };
+  }
+
+  // Ownership check under RLS: a guardian can only see their own children.
+  const supabase = await createClient();
+  const { data: child } = await supabase
+    .from("children")
+    .select("id, is_active")
+    .eq("id", childId)
+    .maybeSingle();
+  if (!child) return { status: "error", message: "Child not found." };
+  if (!child.is_active) {
+    return { status: "error", message: "This record is inactive. Please ask an Admin." };
+  }
+
+  const outcome = await sendChildQrEmail(child.id);
+  if (outcome.status === "sent") {
+    return { status: "success", message: `QR code sent to ${user.profile.email}.` };
+  }
+  return {
+    status: "error",
+    message:
+      outcome.status === "failed" && outcome.reason === "not_configured"
+        ? "Email sending is not set up yet. You can still take a photo of the QR on screen."
+        : "We could not send the email right now. You can still take a photo of the QR on screen.",
+  };
 }

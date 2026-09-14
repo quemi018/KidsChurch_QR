@@ -17,3 +17,14 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
+
+/* Printing a QR card: only the card itself, on white. */
+@media print {
+  header,
+  nav {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}

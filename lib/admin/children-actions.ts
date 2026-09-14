@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getActiveUserWithRole } from "@/lib/auth/session";
+import { sendChildQrEmail } from "@/lib/email/qr-email";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/utils/audit";
 import { formValues, type FormState } from "@/lib/utils/form-state";
@@ -112,4 +113,30 @@ export async function adminUpdateChildAction(
 
   childPaths(childId).forEach((path) => revalidatePath(path));
   redirect(`/admin/children/${childId}?updated=1`);
+}
+
+/** Admin re-send of the existing QR to the guardian's email on file (spec §7.2). */
+export async function adminResendQrEmailAction(childId: string): Promise<FormState> {
+  const actor = await getActiveUserWithRole("admin");
+  if (!actor) return { status: "error", message: "Admin sign-in required." };
+
+  const outcome = await sendChildQrEmail(childId);
+  switch (outcome.status) {
+    case "sent":
+      return { status: "success", message: "QR code email sent to the guardian." };
+    case "no_email":
+      return { status: "error", message: "The guardian has no email address on file." };
+    case "inactive":
+      return { status: "error", message: "This child record is archived." };
+    case "not_found":
+      return { status: "error", message: "Child not found." };
+    case "failed":
+      return {
+        status: "error",
+        message:
+          outcome.reason === "not_configured"
+            ? "Email sending is not configured (RESEND_API_KEY / EMAIL_FROM)."
+            : "The email provider rejected the message. Check the server logs.",
+      };
+  }
 }

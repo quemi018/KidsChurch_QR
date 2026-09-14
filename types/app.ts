@@ -25,6 +25,3 @@ export const GUARDIAN_RELATIONSHIPS = [
 export type GuardianRelationship = (typeof GUARDIAN_RELATIONSHIPS)[number];
 
 export type SessionStatus = "open" | "closed";
-
-/** QR payload prefix. The QR encodes `vckc:<children.qr_token>` and nothing else. */
-export const QR_PAYLOAD_PREFIX = "vckc:";

@@ -1,16 +1,21 @@
 import Link from "next/link";
 
 import { calculateAge } from "@/lib/utils/age";
+import type { FormState } from "@/lib/utils/form-state";
+
+import { SendQrEmailButton } from "@/components/qr/send-qr-email-button";
 
 type ChildCardProps = {
   child: { id: string; full_name: string; gender: string; birthday: string; is_active: boolean };
+  /** Bound resend action; only provided when the guardian has an email on file. */
+  resendAction?: () => Promise<FormState>;
 };
 
 const linkClass =
   "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-4";
 
 /** Member dashboard card (spec §10, §30). No delete/archive control for guardians. */
-export function ChildCard({ child }: ChildCardProps) {
+export function ChildCard({ child, resendAction }: ChildCardProps) {
   const age = calculateAge(child.birthday);
 
   return (
@@ -43,6 +48,7 @@ export function ChildCard({ child }: ChildCardProps) {
           >
             Edit Child
           </Link>
+          {resendAction ? <SendQrEmailButton action={resendAction} /> : null}
         </div>
       ) : (
         <p className="mt-4 text-sm text-amber-900">

@@ -38,6 +38,12 @@ export default async function ChildPage({
       {query.created === "1" ? (
         <FormAlert tone="success" title="Child added.">
           Open <strong>View QR</strong> and save a photo or screenshot for check-in.
+          {query.email === "sent" ? " We also emailed the QR code to you." : ""}
+        </FormAlert>
+      ) : null}
+      {query.email === "failed" ? (
+        <FormAlert tone="warning">
+          We could not send the QR email. You can view it on screen and try sending it again.
         </FormAlert>
       ) : null}
       {query.updated === "1" ? (

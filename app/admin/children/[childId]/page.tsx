@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { adminResendQrEmailAction } from "@/lib/admin/children-actions";
 import { createClient } from "@/lib/supabase/server";
 import { calculateAge } from "@/lib/utils/age";
 import { formatBirthday, formatDateTime } from "@/lib/utils/datetime";
 import { formatPhilippineMobile } from "@/lib/validation/phone";
 
 import { ArchiveChildControls } from "@/components/admin/archive-child-controls";
+import { SendQrEmailButton } from "@/components/qr/send-qr-email-button";
 import { FormAlert } from "@/components/ui/form-alert";
 
 export const metadata = { title: "Child Details" };
@@ -29,6 +31,7 @@ export default async function AdminChildPage({
   if (!child) notFound();
 
   const guardian = child.guardian;
+  const resend = adminResendQrEmailAction.bind(null, child.id);
 
   return (
     <div className="space-y-8">
@@ -107,6 +110,21 @@ export default async function AdminChildPage({
           )}
         </section>
       </div>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-6">
+        <h2 className="text-lg font-semibold">QR code</h2>
+        <p className="mt-1 mb-4 text-sm text-slate-600">
+          The child&apos;s permanent QR. Guardians view it from their dashboard; when an email is on
+          file it can be re-sent from here.
+        </p>
+        {child.is_active && guardian?.email ? (
+          <SendQrEmailButton action={resend} />
+        ) : (
+          <p className="text-sm text-slate-500">
+            {child.is_active ? "No guardian email on file." : "Record is archived."}
+          </p>
+        )}
+      </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="text-lg font-semibold">Record status</h2>

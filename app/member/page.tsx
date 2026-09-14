@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { requireMember } from "@/lib/auth/session";
+import { resendQrEmailAction } from "@/lib/member/actions";
 import { createClient } from "@/lib/supabase/server";
 
 import { ChildCard } from "@/components/member/child-card";
@@ -29,6 +30,12 @@ export default async function MemberDashboardPage({ searchParams }: PageProps<"/
         <FormAlert tone="success" title="Welcome! Your account is ready.">
           Each child below has a permanent QR code. Open <strong>View QR</strong> and take a photo
           or screenshot to present at check-in.
+          {params.email === "sent" ? " We also emailed each QR code to you." : ""}
+        </FormAlert>
+      ) : null}
+      {params.email === "failed" ? (
+        <FormAlert tone="warning" title="QR code created.">
+          We could not send the QR email. You can view it on screen and try sending it again.
         </FormAlert>
       ) : null}
 
@@ -69,7 +76,11 @@ export default async function MemberDashboardPage({ searchParams }: PageProps<"/
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {list.map((child) => (
-            <ChildCard key={child.id} child={child} />
+            <ChildCard
+              key={child.id}
+              child={child}
+              resendAction={hasEmail ? resendQrEmailAction.bind(null, child.id) : undefined}
+            />
           ))}
         </div>
       )}

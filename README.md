@@ -204,6 +204,24 @@ To relax the gate in a future version, flip `STATION_GATE_ENABLED` in
   **Archive / Reactivate** with an inline confirmation. Archiving is a soft delete
   (`is_active=false`, `archived_at`, `archived_by`), audit-logged, and reversible.
 
+## QR codes and email
+
+- **Payload**: `vckc:<token>` only (`lib/qr/payload.ts`). The token is the database-generated
+  `children.qr_token` (24 random bytes, hex). No personal data is ever encoded.
+- **Image**: generated server-side with `qrcode` (`lib/qr/image.ts`); the member page embeds a
+  PNG data URL, so the raw token never appears in page HTML.
+- **Permanent**: the token is created once at insert and cannot be changed by any client
+  (database trigger); opening the QR page never regenerates anything.
+- **Email** (`lib/email/`): `EmailProvider` interface with a Resend implementation and an
+  "unconfigured" fallback. Set `RESEND_API_KEY` and `EMAIL_FROM` to enable sending; without
+  them every send reports `not_configured` and the UI tells the guardian to use the on-screen QR.
+- One email per child, subject `Victory Caloocan Kids Church — QR Code for <Child Name>`, QR
+  inline (`cid:`) and attached as PNG, with a privacy reminder.
+- Sent automatically after registration and Add Child when the guardian has an email. Failure
+  never fails registration (spec §33) — the dashboard shows a warning instead.
+- **Send QR to Email**: members (dashboard card, QR page) and Admins (child detail) re-send the
+  existing QR.
+
 ## Build phases
 
 Development follows the phases in `spec.md` §53. Screens scheduled for a later phase
@@ -213,7 +231,7 @@ render a placeholder that names the phase.
 - [x] Phase 2 — Database and security (migrations, RLS)
 - [x] Phase 3 — Authentication and Registration Station gate
 - [x] Phase 4 — Guardian + children
-- [ ] Phase 5 — QR generation and email delivery
+- [x] Phase 5 — QR generation and email delivery
 - [ ] Phase 6 — Kids Church sessions
 - [ ] Phase 7 — Scanner + attendance
 - [ ] Phase 8 — Realtime Admin dashboard
