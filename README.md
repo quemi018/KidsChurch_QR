@@ -27,6 +27,9 @@ npm run dev
 
 Open <http://localhost:3000>.
 
+> Windows PowerShell may block `npm` with "running scripts is disabled". Use `npm.cmd run dev`
+> (or run scripts through `node` directly, e.g. `node --env-file=.env.local scripts/create-admin.ts`).
+
 ### Environment variables
 
 See [`.env.example`](./.env.example). `.env.local` is git-ignored — never commit real keys.

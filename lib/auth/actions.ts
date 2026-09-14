@@ -4,7 +4,12 @@ import { redirect } from "next/navigation";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { fieldErrors, guardianRegistrationSchema, loginSchema } from "@/lib/validation/auth";
+import {
+  fieldErrors,
+  guardianRegistrationSchema,
+  loginSchema,
+  withPasswordMismatch,
+} from "@/lib/validation/auth";
 import { formValues, type FormState } from "@/lib/utils/form-state";
 import type { UserRole } from "@/types/app";
 
@@ -102,7 +107,11 @@ export async function registerGuardianAction(
     confirmPassword: formData.get("confirmPassword"),
   });
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrors(parsed.error), values };
+    return {
+      status: "error",
+      fieldErrors: withPasswordMismatch(fieldErrors(parsed.error), formData),
+      values,
+    };
   }
   const input = parsed.data;
 

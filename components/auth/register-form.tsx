@@ -21,10 +21,24 @@ export function RegisterForm() {
   const [state, action] = useActionState(registerGuardianAction, idleFormState);
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
   const values = state.status === "error" ? (state.values ?? {}) : {};
-  const [relationship, setRelationship] = useState(values.guardianRelationship ?? "");
+  // Whether to show the free-text field; re-derived from the returned values below.
+  const [showOther, setShowOther] = useState(false);
+  // React 19 resets the form after every Server Action, before the new state renders,
+  // so a <select> would lose its selection. Remounting the form after a failed
+  // submission re-mounts every field from the returned values. State is adjusted
+  // during render (React's "adjusting state when a prop changes" pattern).
+  const [formKey, setFormKey] = useState(0);
+  const [seenState, setSeenState] = useState(state);
+  if (seenState !== state) {
+    setSeenState(state);
+    if (state.status === "error") {
+      setShowOther(state.values?.guardianRelationship === "Other");
+      setFormKey((key) => key + 1);
+    }
+  }
 
   return (
-    <form action={action} className="space-y-8" noValidate>
+    <form key={formKey} action={action} className="space-y-8" noValidate>
       {state.status === "error" && state.message ? (
         <FormAlert tone="error">{state.message}</FormAlert>
       ) : null}
@@ -45,12 +59,12 @@ export function RegisterForm() {
           label="Relationship to the child"
           options={relationshipOptions}
           placeholder="Select…"
-          value={relationship}
-          onChange={(event) => setRelationship(event.target.value)}
+          defaultValue={values.guardianRelationship ?? ""}
+          onChange={(event) => setShowOther(event.target.value === "Other")}
           error={errors.guardianRelationship}
           required
         />
-        {relationship === "Other" ? (
+        {showOther ? (
           <InputField
             id="guardianRelationshipOther"
             label="Please specify (optional)"

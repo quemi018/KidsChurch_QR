@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/utils/audit";
 import { formValues, type FormState } from "@/lib/utils/form-state";
-import { createAdminSchema, fieldErrors } from "@/lib/validation/auth";
+import { createAdminSchema, fieldErrors, withPasswordMismatch } from "@/lib/validation/auth";
 
 import { getActiveUserWithRole } from "./session";
 
@@ -29,7 +29,11 @@ export async function createAdminAction(_prev: FormState, formData: FormData): P
     confirmPassword: formData.get("confirmPassword"),
   });
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrors(parsed.error), values };
+    return {
+      status: "error",
+      fieldErrors: withPasswordMismatch(fieldErrors(parsed.error), formData),
+      values,
+    };
   }
 
   const admin = createAdminClient();

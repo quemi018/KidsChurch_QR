@@ -96,3 +96,25 @@ export function fieldErrors(error: z.ZodError): Record<string, string> {
   }
   return out;
 }
+
+/**
+ * zod skips object-level refinements when any field fails, so the
+ * password-mismatch check would otherwise only surface on a second attempt.
+ * Call after a failed parse to report it alongside the other field errors.
+ */
+export function withPasswordMismatch(
+  errors: Record<string, string>,
+  formData: FormData,
+): Record<string, string> {
+  const password = formData.get("password");
+  const confirm = formData.get("confirmPassword");
+  if (
+    !("confirmPassword" in errors) &&
+    typeof password === "string" &&
+    typeof confirm === "string" &&
+    password !== confirm
+  ) {
+    return { ...errors, confirmPassword: "Passwords do not match." };
+  }
+  return errors;
+}
