@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { getCurrentUser, homePathFor } from "@/lib/auth/session";
 import { requireStation } from "@/lib/auth/station";
+import { todayYmdString } from "@/lib/utils/age";
 
 import { RegisterForm } from "@/components/auth/register-form";
 
@@ -23,7 +24,7 @@ export default async function RegisterPage() {
         </p>
       </div>
 
-      <RegisterForm />
+      <RegisterForm maxBirthday={todayYmdString()} />
 
       <p className="text-sm text-slate-600">
         Already registered?{" "}

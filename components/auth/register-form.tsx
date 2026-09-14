@@ -7,6 +7,7 @@ import { idleFormState } from "@/lib/utils/form-state";
 import { PASSWORD_MIN_LENGTH } from "@/lib/validation/auth";
 import { GUARDIAN_RELATIONSHIPS } from "@/types/app";
 
+import { ChildrenFieldset } from "@/components/auth/children-fieldset";
 import { InputField, SelectField } from "@/components/ui/field";
 import { FormAlert } from "@/components/ui/form-alert";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -14,10 +15,9 @@ import { SubmitButton } from "@/components/ui/submit-button";
 const relationshipOptions = GUARDIAN_RELATIONSHIPS.map((value) => ({ value, label: value }));
 
 /**
- * Guardian account form (spec §9). The Children section of the registration
- * wizard is added in Phase 4.
+ * Registration wizard (spec §9, §10): guardian details, one or more children, password.
  */
-export function RegisterForm() {
+export function RegisterForm({ maxBirthday }: { maxBirthday: string }) {
   const [state, action] = useActionState(registerGuardianAction, idleFormState);
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
   const values = state.status === "error" ? (state.values ?? {}) : {};
@@ -103,6 +103,8 @@ export function RegisterForm() {
           error={errors.email}
         />
       </fieldset>
+
+      <ChildrenFieldset values={values} errors={errors} maxBirthday={maxBirthday} />
 
       <fieldset className="space-y-5">
         <legend className="text-lg font-semibold">Password</legend>

@@ -186,6 +186,24 @@ validates the cookie against the database. Admins can revoke any station from th
 To relax the gate in a future version, flip `STATION_GATE_ENABLED` in
 [`lib/auth/station-policy.ts`](./lib/auth/station-policy.ts).
 
+## Guardians and children
+
+- **Registration wizard** (`/register`, station only): guardian details + one or more children
+  (`+ Add Another Child`). At least one child is required. Everything is validated first; the
+  Auth user is created with the service-role API, children are inserted, and if the children
+  insert fails the user is deleted again so no half-registered account remains.
+- **Member dashboard** (`/member`): one card per child with the age computed from the
+  birthday (`lib/utils/age.ts`, month/day-aware, Asia/Manila calendar). No delete button.
+- **Edit profile** (`/member/profile`): name, relationship, city, email. Changing the
+  **mobile number** requires the current password and goes through the Auth admin API
+  (no SMS); a trigger mirrors it into `profiles.phone`.
+- **Add / edit child**: inserts and updates run as the guardian under RLS; `qr_token`
+  cannot change (database trigger).
+- **Admin → Guardians / Children**: searchable lists (name or mobile number; local
+  `09…` input matches stored `+63…`), detail pages, Admin correction of child details, and
+  **Archive / Reactivate** with an inline confirmation. Archiving is a soft delete
+  (`is_active=false`, `archived_at`, `archived_by`), audit-logged, and reversible.
+
 ## Build phases
 
 Development follows the phases in `spec.md` §53. Screens scheduled for a later phase
@@ -194,7 +212,7 @@ render a placeholder that names the phase.
 - [x] Phase 1 — Project foundation
 - [x] Phase 2 — Database and security (migrations, RLS)
 - [x] Phase 3 — Authentication and Registration Station gate
-- [ ] Phase 4 — Guardian + children
+- [x] Phase 4 — Guardian + children
 - [ ] Phase 5 — QR generation and email delivery
 - [ ] Phase 6 — Kids Church sessions
 - [ ] Phase 7 — Scanner + attendance
