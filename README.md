@@ -83,13 +83,62 @@ proxy.ts             Next.js request proxy — refreshes the Supabase session on
 | `server.ts` | Server Components / Actions / Route Handlers | publishable  | enforced |
 | `admin.ts`  | Trusted server code only (`server-only`)     | service role | bypassed |
 
+## Database
+
+Schema lives in [`supabase/migrations/`](./supabase/migrations) and is applied to the
+Supabase project **KidsChurch_QR**. Every schema change is a new migration file; never
+edit the database by hand.
+
+| Table                   | Purpose                                                         |
+| ----------------------- | --------------------------------------------------------------- |
+| `profiles`              | One row per Auth user (`role` = `member` or `admin`)            |
+| `children`              | Children per guardian; permanent opaque `qr_token`; soft-delete |
+| `church_sessions`       | Kids Church services; at most one `open` at a time              |
+| `attendance`            | Check-ins with snapshots; `UNIQUE(session_id, child_id)`        |
+| `registration_stations` | Admin-activated browsers allowed to use Member screens          |
+| `audit_logs`            | Append-only record of sensitive Admin actions                   |
+
+Security model (all enforced in the database, not just the UI):
+
+- RLS is enabled on every table; `anon` has no table privileges at all.
+- `public.is_admin()` (SECURITY DEFINER) backs every Admin policy — the role is read from
+  `profiles.role`, never from client state.
+- A profile is created by trigger when an Auth user is created. `role` comes only from
+  `app_metadata` (server-settable), so a client can never register as an admin.
+- Triggers block privileged column changes RLS cannot express: members cannot change
+  `role`, `phone`, `is_active`, `qr_token`, `guardian_id`, or archive fields.
+- `role` and `qr_token` changes are server-only (service role); admins archive/reactivate.
+- Duplicate check-ins and a second open session are rejected by unique indexes.
+- Children with attendance history cannot be deleted (`ON DELETE RESTRICT`).
+- Realtime publishes `attendance` and `church_sessions`; RLS filters what each subscriber sees.
+
+### Applying migrations
+
+Migrations were applied to the project via the Supabase MCP in the same order as the
+files. To apply to a fresh project with the CLI:
+
+```bash
+npx supabase link --project-ref <ref>
+npx supabase db push
+```
+
+### Regenerating database types
+
+After any migration, regenerate [`types/database.ts`](./types/database.ts) (CLI shown;
+the Supabase MCP `generate_typescript_types` tool produces the same output):
+
+```bash
+npx supabase gen types typescript --project-id <ref> > types/database.ts
+npx prettier --write types/database.ts
+```
+
 ## Build phases
 
 Development follows the phases in `spec.md` §53. Screens scheduled for a later phase
 render a placeholder that names the phase.
 
 - [x] Phase 1 — Project foundation
-- [ ] Phase 2 — Database and security (migrations, RLS)
+- [x] Phase 2 — Database and security (migrations, RLS)
 - [ ] Phase 3 — Authentication and Registration Station gate
 - [ ] Phase 4 — Guardian + children
 - [ ] Phase 5 — QR generation and email delivery
