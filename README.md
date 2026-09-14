@@ -132,6 +132,57 @@ npx supabase gen types typescript --project-id <ref> > types/database.ts
 npx prettier --write types/database.ts
 ```
 
+## Authentication
+
+Everyone (guardians and Admins) signs in with **mobile number + password** through Supabase
+Auth. Numbers are normalised to E.164 (`09171234567` → `+639171234567`) before they reach
+Supabase. No SMS/OTP in Version 1.
+
+### Supabase Auth settings (one-time, in the dashboard)
+
+| Setting                                                               | Value | Why                                                                     |
+| --------------------------------------------------------------------- | ----- | ----------------------------------------------------------------------- |
+| Authentication → Providers → Phone → **Enable**                       | on    | Required for phone + password sign-in                                   |
+| Phone → **Confirm phone**                                             | off   | No OTP in V1. The SMS provider fields may hold placeholders; never used |
+| Authentication → Sign In / Providers → **Allow new users to sign up** | off   | Accounts are created server-side only (see below)                       |
+
+### How accounts are created
+
+Public sign-up is disabled so the Registration Station gate cannot be bypassed by calling
+Supabase directly. All accounts are created with the service-role admin API:
+
+- **Guardians** — `/register` on an activated Registration Station
+  (`lib/auth/actions.ts → registerGuardianAction`).
+- **Admins** — by an existing Admin at `/admin/admin-users`, or for the very first Admin:
+
+```bash
+npm run create-admin
+```
+
+The script reads `.env.local` (needs `SUPABASE_SERVICE_ROLE_KEY`) and prompts for name,
+mobile number and password. Admin role is set via `app_metadata.role`, which only the
+service role can write; the database trigger copies it into `profiles.role`.
+
+### Authorization layers
+
+1. **Database RLS** — the real boundary (see Database above).
+2. **`proxy.ts`** — refreshes the session; redirects signed-out visitors from `/member` and
+   `/admin` to `/login`; cheap Registration Station cookie pre-check.
+3. **Layouts** — `requireAdmin()` / `requireMember()` read the role from `profiles` on every
+   request and redirect on mismatch; deactivated accounts land on `/deactivated`.
+4. **Server Actions** — re-check the caller (`getActiveUserWithRole`) before every write.
+
+### Registration Station gate
+
+`/register` and `/member/*` only work in a browser an Admin has activated from
+**Admin → Settings**. Activation stores a SHA-256 hash of a random token in
+`registration_stations` and sets an HttpOnly cookie with the raw token; every gated request
+validates the cookie against the database. Admins can revoke any station from the same page.
+`/login` is deliberately not gated (Admins must sign in to activate a station).
+
+To relax the gate in a future version, flip `STATION_GATE_ENABLED` in
+[`lib/auth/station-policy.ts`](./lib/auth/station-policy.ts).
+
 ## Build phases
 
 Development follows the phases in `spec.md` §53. Screens scheduled for a later phase
@@ -139,7 +190,7 @@ render a placeholder that names the phase.
 
 - [x] Phase 1 — Project foundation
 - [x] Phase 2 — Database and security (migrations, RLS)
-- [ ] Phase 3 — Authentication and Registration Station gate
+- [x] Phase 3 — Authentication and Registration Station gate
 - [ ] Phase 4 — Guardian + children
 - [ ] Phase 5 — QR generation and email delivery
 - [ ] Phase 6 — Kids Church sessions
