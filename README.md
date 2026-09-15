@@ -250,6 +250,21 @@ Open/close/reopen are audit-logged.
 - The current session's attendance table (Date first, newest first) is rendered on load and
   updated from scan results; Phase 8 adds the Realtime subscription.
 
+## Realtime dashboard
+
+The Admin dashboard and the Scanner share one Supabase Realtime subscription
+(`components/admin/use-live-attendance.ts`): `postgres_changes` on `attendance` filtered by
+the open session, INSERT and DELETE, de-duplicated by id and kept newest-first. Row Level
+Security applies to the subscription, so the hook attaches the signed-in Admin's access token
+**before** joining (a channel joined as `anon` reports SUBSCRIBED but never delivers rows) and
+re-attaches it on token refresh. Connection status is shown as Live / Reconnecting; after every
+reconnect, and whenever the tab becomes visible again, the table is re-queried so a dropped
+connection cannot lose records (spec §21). A second subscription on `church_sessions` refreshes
+the page's server data whenever a session is opened or closed on any device.
+
+Summary cards show Total / Male / Female; the search box filters by child, guardian, or
+contact number (local `09…` input matches the stored `+63…`).
+
 ## Build phases
 
 Development follows the phases in `spec.md` §53. Screens scheduled for a later phase
@@ -262,7 +277,7 @@ render a placeholder that names the phase.
 - [x] Phase 5 — QR generation and email delivery
 - [x] Phase 6 — Kids Church sessions
 - [x] Phase 7 — Scanner + attendance
-- [ ] Phase 8 — Realtime Admin dashboard
+- [x] Phase 8 — Realtime Admin dashboard
 - [ ] Phase 9 — Attendance history
 - [ ] Phase 10 — Testing and hardening
 - [ ] Phase 11 — Deployment (Vercel)

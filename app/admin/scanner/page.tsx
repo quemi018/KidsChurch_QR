@@ -28,12 +28,11 @@ export default async function ScannerPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Scanner</h1>
-      <CurrentSessionCard session={session} showActions={!session} />
+      <CurrentSessionCard session={session} showActions={!session} showCount={false} />
       <ScannerConsole
         key={session?.id ?? "none"}
-        sessionOpen={Boolean(session)}
+        sessionId={session?.id ?? null}
         initialRows={rows}
-        initialCount={session?.checkedInCount ?? 0}
       />
     </div>
   );

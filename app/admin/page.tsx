@@ -1,11 +1,16 @@
 import Link from "next/link";
 
+import { ATTENDANCE_ROW_COLUMNS, type AttendanceRow } from "@/lib/attendance/types";
 import { getOpenSession } from "@/lib/sessions/queries";
 import { createClient } from "@/lib/supabase/server";
 
 import { CurrentSessionCard } from "@/components/admin/current-session-card";
+import { LiveAttendanceDashboard } from "@/components/admin/live-attendance-dashboard";
+import { SessionWatcher } from "@/components/admin/session-watcher";
 
 export const metadata = { title: "Admin Dashboard" };
+
+const LIVE_ROW_LIMIT = 500;
 
 const quickLinks = [
   { href: "/admin/scanner", label: "Scanner", description: "Scan QR codes to check children in." },
@@ -21,33 +26,42 @@ export default async function AdminDashboardPage() {
     supabase.from("children").select("id", { count: "exact", head: true }).eq("is_active", true),
   ]);
 
+  let rows: AttendanceRow[] = [];
+  if (openSession) {
+    const { data } = await supabase
+      .from("attendance")
+      .select(ATTENDANCE_ROW_COLUMNS)
+      .eq("session_id", openSession.id)
+      .order("checked_in_at", { ascending: false })
+      .limit(LIVE_ROW_LIMIT);
+    rows = data ?? [];
+  }
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <p className="mt-1 text-slate-600">Victory Caloocan Kids Church check-in.</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+          <p className="mt-1 text-slate-600">Victory Caloocan Kids Church check-in.</p>
+        </div>
+        <p className="text-sm text-slate-600">
+          Registered children: <span className="text-lg font-bold">{activeChildren ?? 0}</span>
+        </p>
       </div>
 
-      <CurrentSessionCard session={openSession} />
+      <CurrentSessionCard session={openSession} showCount={false} />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-            Registered children
-          </p>
-          <p className="mt-1 text-3xl font-bold">{activeChildren ?? 0}</p>
-        </div>
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-5 sm:col-span-2">
-          <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-            Live attendance
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            Real-time table and Male / Female counts arrive in Phase 8.
-          </p>
-        </div>
-      </div>
+      {openSession ? (
+        <LiveAttendanceDashboard
+          key={openSession.id}
+          sessionId={openSession.id}
+          initialRows={rows}
+        />
+      ) : (
+        <SessionWatcher />
+      )}
 
-      <nav aria-label="Quick links" className="grid gap-4 sm:grid-cols-2">
+      <nav aria-label="Quick links" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {quickLinks.map((link) => (
           <Link
             key={link.href}

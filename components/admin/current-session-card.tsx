@@ -6,13 +6,19 @@ type CurrentSessionCardProps = {
   session: OpenSession | null;
   /** Show the Scanner / Sessions shortcuts. */
   showActions?: boolean;
+  /** Hide the server-rendered count when a live attendance panel is shown below. */
+  showCount?: boolean;
 };
 
 const linkClass =
   "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-4";
 
 /** "CURRENT SESSION" summary used on the Admin dashboard, Sessions page and Scanner (spec §20, §31). */
-export function CurrentSessionCard({ session, showActions = true }: CurrentSessionCardProps) {
+export function CurrentSessionCard({
+  session,
+  showActions = true,
+  showCount = true,
+}: CurrentSessionCardProps) {
   if (!session) {
     return (
       <section className="rounded-xl border border-amber-300 bg-amber-50 p-6">
@@ -47,10 +53,14 @@ export function CurrentSessionCard({ session, showActions = true }: CurrentSessi
             Status: <span className="font-semibold">OPEN</span>
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-xs font-semibold tracking-wide text-green-800 uppercase">Checked in</p>
-          <p className="text-4xl font-bold text-green-900">{session.checkedInCount}</p>
-        </div>
+        {showCount ? (
+          <div className="text-right">
+            <p className="text-xs font-semibold tracking-wide text-green-800 uppercase">
+              Checked in
+            </p>
+            <p className="text-4xl font-bold text-green-900">{session.checkedInCount}</p>
+          </div>
+        ) : null}
       </div>
       {showActions ? (
         <div className="mt-4 flex flex-wrap gap-2">

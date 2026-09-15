@@ -4,13 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { AttendanceRow, CheckInResult } from "@/lib/attendance/types";
 
-import { AttendanceTable } from "./attendance-table";
+import { AttendancePanel } from "./attendance-panel";
 import { ScanResultCard, type ScanDisplayState } from "./scan-result-card";
+import { useLiveAttendance } from "./use-live-attendance";
+import { useSessionChangeRefresh } from "./use-session-change-refresh";
 
 type ScannerConsoleProps = {
-  sessionOpen: boolean;
+  sessionId: string | null;
   initialRows: AttendanceRow[];
-  initialCount: number;
 };
 
 /** Ignore an identical payload arriving within this window (scanner double-trigger). */
@@ -68,16 +69,17 @@ function rowFromResult(result: Extract<CheckInResult, { status: "checked_in" }>)
  * keeps that input focused, submits on Enter, clears it, debounces double
  * fires, queues back-to-back scans, and shows the outcome prominently.
  */
-export function ScannerConsole({ sessionOpen, initialRows, initialCount }: ScannerConsoleProps) {
+export function ScannerConsole({ sessionId, initialRows }: ScannerConsoleProps) {
+  const sessionOpen = sessionId !== null;
   const inputRef = useRef<HTMLInputElement>(null);
   const queueRef = useRef<string[]>([]);
   const busyRef = useRef(false);
   const lastScanRef = useRef<{ payload: string; at: number } | null>(null);
 
   const [display, setDisplay] = useState<ScanDisplayState>({ kind: "idle" });
-  const [rows, setRows] = useState<AttendanceRow[]>(initialRows);
-  const [count, setCount] = useState(initialCount);
   const [focused, setFocused] = useState(false);
+  const { rows, status, mergeRow, refresh } = useLiveAttendance({ sessionId, initialRows });
+  useSessionChangeRefresh();
 
   const focusInput = useCallback(() => {
     inputRef.current?.focus({ preventScroll: true });
@@ -119,8 +121,8 @@ export function ScannerConsole({ sessionOpen, initialRows, initialCount }: Scann
       const result = (await response.json()) as CheckInResult;
 
       if (result.status === "checked_in") {
-        setRows((current) => [rowFromResult(result), ...current]);
-        setCount((current) => current + 1);
+        // Shown immediately; the Realtime INSERT for the same id is de-duplicated.
+        mergeRow(rowFromResult(result));
         beep("success");
       } else if (result.status === "already_checked_in") {
         beep("warning");
@@ -137,7 +139,7 @@ export function ScannerConsole({ sessionOpen, initialRows, initialCount }: Scann
       focusInput();
       if (queueRef.current.length) void processQueue();
     }
-  }, [focusInput]);
+  }, [focusInput, mergeRow]);
 
   const submitScan = useCallback(
     (raw: string) => {
@@ -206,13 +208,7 @@ export function ScannerConsole({ sessionOpen, initialRows, initialCount }: Scann
 
       <ScanResultCard state={display} />
 
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-lg font-semibold">Live attendance</h2>
-        <p className="text-lg">
-          Today&apos;s attendance: <span className="text-2xl font-bold">{count}</span>
-        </p>
-      </div>
-      <AttendanceTable rows={rows} emptyMessage="No check-ins yet for this session." />
+      <AttendancePanel rows={rows} status={status} onRefresh={() => void refresh()} />
     </div>
   );
 }
