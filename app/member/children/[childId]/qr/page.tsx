@@ -4,8 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import { requireMember } from "@/lib/auth/session";
 import { resendQrEmailAction } from "@/lib/member/actions";
 import { qrDataUrl } from "@/lib/qr/image";
+import { buildQrPayload } from "@/lib/qr/payload";
 import { createClient } from "@/lib/supabase/server";
 
+import { DevScanHelper } from "@/components/qr/dev-scan-helper";
 import { PrintButton } from "@/components/qr/print-button";
 import { QrDisplay } from "@/components/qr/qr-display";
 import { SendQrEmailButton } from "@/components/qr/send-qr-email-button";
@@ -31,6 +33,7 @@ export default async function ChildQrPage({ params }: PageProps<"/member/childre
   const dataUrl = await qrDataUrl(child.qr_token);
   const hasEmail = Boolean(user.profile.email);
   const resend = resendQrEmailAction.bind(null, child.id);
+  const showDevHelper = process.env.NODE_ENV === "development";
 
   return (
     <div className="space-y-6">
@@ -73,6 +76,8 @@ export default async function ChildQrPage({ params }: PageProps<"/member/childre
             .
           </p>
         ) : null}
+
+        {showDevHelper ? <DevScanHelper payload={buildQrPayload(child.qr_token)} /> : null}
 
         <p className="text-xs text-slate-500">
           Privacy: the QR contains only a random code, not your child&apos;s details. Please do not

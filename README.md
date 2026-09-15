@@ -30,6 +30,28 @@ Open <http://localhost:3000>.
 > Windows PowerShell may block `npm` with "running scripts is disabled". Use `npm.cmd run dev`
 > (or run scripts through `node` directly, e.g. `node --env-file=.env.local scripts/create-admin.ts`).
 
+### Try it locally (both roles, no hardware)
+
+Sessions are per browser, so use two browser windows: a normal one for the **Admin** and a
+private/incognito one for the **Member** (or two different browsers).
+
+1. Start the app: `npm.cmd run dev`, open <http://localhost:3000>.
+2. **Admin window** — Log In with the Admin account created by `npm run create-admin`.
+   Go to **Settings → Activate this device** (this browser becomes the Registration Station),
+   then **Sessions → Open Session**, then open **Scanner**.
+3. **Member window** — this window must also be a station: log in as the Admin there once,
+   activate it in Settings, log out. Then **Create Account**: guardian details, one or more
+   children, password. You land on **My Children**.
+4. **Member window** — click **View QR** on a child. In development the page shows a purple
+   "Testing without a scanner" box with the exact text a USB scanner would type. Copy it.
+5. **Admin window** — on the Scanner, paste the text and press **Enter**. The green
+   **CHECKED IN** card appears, the table and counts update; press Enter again for
+   **Already Checked In**. The Admin Dashboard in a third window updates live.
+6. Explore: edit the child (QR stays the same), archive it from **Admin → Children** (its QR is
+   then rejected), close the session (scans are refused), review **Attendance**.
+
+The purple helper never renders in production builds.
+
 ### Environment variables
 
 See [`.env.example`](./.env.example). `.env.local` is git-ignored — never commit real keys.
