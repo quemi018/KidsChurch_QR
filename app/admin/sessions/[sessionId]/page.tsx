@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ATTENDANCE_ROW_COLUMNS } from "@/lib/attendance/types";
 import { describeSession } from "@/lib/sessions/queries";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/utils/datetime";
 
+import { AttendanceTable } from "@/components/admin/attendance-table";
+import { RemoveAttendanceButton } from "@/components/admin/remove-attendance-button";
 import { SessionStatusControls } from "@/components/admin/session-status-controls";
 import { FormAlert } from "@/components/ui/form-alert";
 
@@ -26,6 +29,13 @@ export default async function SessionPage({
     .eq("id", sessionId)
     .maybeSingle();
   if (!session) notFound();
+
+  const { data: attendance } = await supabase
+    .from("attendance")
+    .select(ATTENDANCE_ROW_COLUMNS)
+    .eq("session_id", sessionId)
+    .order("checked_in_at", { ascending: false })
+    .limit(1000);
 
   const status = session.status as "open" | "closed";
   const checkedInCount = session.attendance[0]?.count ?? 0;
@@ -100,11 +110,15 @@ export default async function SessionPage({
         </section>
       </div>
 
-      <section className="rounded-xl border border-dashed border-slate-300 bg-white p-6">
+      <section className="space-y-3">
         <h2 className="text-lg font-semibold">Attendance</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          The attendance list for this session appears here in Phase 9 (Attendance History).
-        </p>
+        <AttendanceTable
+          rows={attendance ?? []}
+          emptyMessage="No check-ins recorded for this session."
+          renderActions={(row) => (
+            <RemoveAttendanceButton attendanceId={row.id} childName={row.child_name_snapshot} />
+          )}
+        />
       </section>
     </div>
   );

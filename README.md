@@ -265,6 +265,15 @@ the page's server data whenever a session is opened or closed on any device.
 Summary cards show Total / Male / Female; the search box filters by child, guardian, or
 contact number (local `09…` input matches the stored `+63…`).
 
+## Attendance history
+
+`/admin/attendance` (Admin-only; members are redirected away and RLS returns them nothing)
+lists every check-in with its snapshot values, newest first, filtered by session, by an
+inclusive date range on the Manila calendar, and by search (child, guardian, or contact).
+Results are capped at 200 with a hint to narrow the filters. Each session's page shows its own
+list. An Admin can **Remove** an incorrect record (two-step confirmation); the deletion is
+audit-logged with the snapshot values and live dashboards drop the row via Realtime.
+
 ## Build phases
 
 Development follows the phases in `spec.md` §53. Screens scheduled for a later phase
@@ -278,7 +287,7 @@ render a placeholder that names the phase.
 - [x] Phase 6 — Kids Church sessions
 - [x] Phase 7 — Scanner + attendance
 - [x] Phase 8 — Realtime Admin dashboard
-- [ ] Phase 9 — Attendance history
+- [x] Phase 9 — Attendance history
 - [ ] Phase 10 — Testing and hardening
 - [ ] Phase 11 — Deployment (Vercel)
 
