@@ -9,6 +9,7 @@ import {
 } from "@/lib/auth/station-policy";
 import type { Database } from "@/types/database";
 
+import { authCookieOptions } from "./cookie-options";
 import { getPublicSupabaseEnv, isSupabaseConfigured } from "./env";
 
 /** Route prefixes that require a signed-in user. Role checks happen in the layouts. */
@@ -42,6 +43,7 @@ export async function updateSession(request: NextRequest) {
   const { url, publishableKey } = getPublicSupabaseEnv();
 
   const supabase = createServerClient<Database>(url, publishableKey, {
+    cookieOptions: authCookieOptions,
     cookies: {
       getAll() {
         return request.cookies.getAll();

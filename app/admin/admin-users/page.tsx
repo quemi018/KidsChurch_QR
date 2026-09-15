@@ -5,7 +5,7 @@ import { formatDateTime } from "@/lib/utils/datetime";
 import { formatPhilippineMobile } from "@/lib/validation/phone";
 
 import { CreateAdminForm } from "@/components/admin/create-admin-form";
-import { Button } from "@/components/ui/button";
+import { ConfirmSubmit } from "@/components/ui/confirm-submit";
 
 export const metadata = { title: "Admin Users" };
 
@@ -66,17 +66,17 @@ export default async function AdminUsersPage() {
                   <td className="px-4 py-3 text-slate-600">{formatDateTime(admin.created_at)}</td>
                   <td className="px-4 py-3 text-right">
                     {isMe || isLastActive ? null : (
-                      <form action={setAdminActiveAction}>
-                        <input type="hidden" name="profileId" value={admin.id} />
-                        <input
-                          type="hidden"
-                          name="active"
-                          value={admin.is_active ? "false" : "true"}
-                        />
-                        <Button type="submit" variant={admin.is_active ? "danger" : "secondary"}>
-                          {admin.is_active ? "Deactivate" : "Reactivate"}
-                        </Button>
-                      </form>
+                      <ConfirmSubmit
+                        action={setAdminActiveAction}
+                        fields={{ profileId: admin.id, active: admin.is_active ? "false" : "true" }}
+                        label={admin.is_active ? "Deactivate" : "Reactivate"}
+                        question={
+                          admin.is_active
+                            ? `Deactivate ${admin.full_name}? They will be signed out of Admin access.`
+                            : `Reactivate ${admin.full_name}?`
+                        }
+                        variant={admin.is_active ? "danger" : "secondary"}
+                      />
                     )}
                   </td>
                 </tr>

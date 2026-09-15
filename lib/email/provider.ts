@@ -77,8 +77,16 @@ class UnconfiguredProvider implements EmailProvider {
 }
 
 let cached: EmailProvider | null = null;
+let override: EmailProvider | null = null;
+
+/** Test seam: substitute a fake provider (pass null to restore env-based selection). */
+export function setEmailProviderForTesting(provider: EmailProvider | null): void {
+  override = provider;
+  cached = null;
+}
 
 export function getEmailProvider(): EmailProvider {
+  if (override) return override;
   if (cached) return cached;
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;

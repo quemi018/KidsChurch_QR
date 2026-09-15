@@ -50,15 +50,19 @@ proxy fails loudly if they are missing.
 
 ## Scripts
 
-| Command                | Purpose                       |
-| ---------------------- | ----------------------------- |
-| `npm run dev`          | Start the dev server          |
-| `npm run build`        | Production build              |
-| `npm run start`        | Serve the production build    |
-| `npm run lint`         | ESLint                        |
-| `npm run typecheck`    | `tsc --noEmit`                |
-| `npm run format`       | Prettier (write)              |
-| `npm run format:check` | Prettier (check only, for CI) |
+| Command                    | Purpose                                        |
+| -------------------------- | ---------------------------------------------- |
+| `npm run dev`              | Start the dev server                           |
+| `npm run build`            | Production build                               |
+| `npm run start`            | Serve the production build                     |
+| `npm run lint`             | ESLint                                         |
+| `npm run typecheck`        | `tsc --noEmit`                                 |
+| `npm run format`           | Prettier (write)                               |
+| `npm run format:check`     | Prettier (check only, for CI)                  |
+| `npm test`                 | All tests (unit + integration)                 |
+| `npm run test:unit`        | Unit tests only (no network)                   |
+| `npm run test:integration` | Integration tests against the Supabase project |
+| `npm run create-admin`     | Create the first Admin account                 |
 
 ## Project structure
 
@@ -274,6 +278,47 @@ Results are capped at 200 with a hint to narrow the filters. Each session's page
 list. An Admin can **Remove** an incorrect record (two-step confirmation); the deletion is
 audit-logged with the snapshot values and live dashboards drop the row via Realtime.
 
+## Testing
+
+Tests live in [`tests/`](./tests) and run with [Vitest](https://vitest.dev).
+
+- **Unit** (`tests/unit`, no network): phone normalisation, age calculation (month/day-aware,
+  leap days, Manila calendar), QR payload build/parse, registration children parsing,
+  zod schemas, search-term building, the QR email builder, email provider selection.
+- **Integration** (`tests/integration`): run against the real Supabase project using
+  `.env.local`. They create their own users (member A, member B, an Admin), sign each in with
+  a real JWT, exercise the public API exactly as the browser does, and delete everything they
+  created. They skip automatically when `SUPABASE_SERVICE_ROLE_KEY` is not set (e.g. in CI).
+  Covered, per spec §49: members cannot read other guardians, their children, or attendance,
+  and cannot promote themselves; guardians can add/edit their own children but not archive
+  them, and the QR token never changes; the check-in pipeline for valid / invalid / unknown /
+  archived QRs, snapshots and age-as-of-session-date, duplicate handling, **five concurrent
+  scans producing exactly one row**, closed sessions rejecting attendance (application and
+  database); session open/close rules; email omitted / sent / provider failure / archived.
+
+```bash
+npm test
+```
+
+CI (`.github/workflows/ci.yml`) runs format check, lint, typecheck, unit tests and a production
+build on every push and pull request.
+
+## Security hardening
+
+Beyond RLS and the triggers described under Database:
+
+- Security headers on every response (`X-Frame-Options: DENY`, `nosniff`, referrer and
+  permissions policies); `X-Powered-By` removed. HSTS comes from Vercel.
+- Supabase auth cookies and the Registration Station cookie are `Secure` in production and
+  `SameSite=Lax`.
+- `POST /api/admin/check-in` rejects requests whose `Origin` differs from the host (CSRF guard)
+  before authentication is even checked.
+- Attendance can only be inserted for an open session — enforced by a database trigger, so
+  even privileged writes cannot backfill a closed session.
+- Server logs carry only error codes; never tokens, passwords or phone numbers.
+- Sensitive Admin actions (archive, close session, remove attendance, deactivate a station or
+  an Admin) all require an inline confirmation step.
+
 ## Build phases
 
 Development follows the phases in `spec.md` §53. Screens scheduled for a later phase
@@ -288,7 +333,7 @@ render a placeholder that names the phase.
 - [x] Phase 7 — Scanner + attendance
 - [x] Phase 8 — Realtime Admin dashboard
 - [x] Phase 9 — Attendance history
-- [ ] Phase 10 — Testing and hardening
+- [x] Phase 10 — Testing and hardening
 - [ ] Phase 11 — Deployment (Vercel)
 
 ## Deployment

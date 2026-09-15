@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/utils/datetime";
 
 import { StationActivateForm } from "@/components/admin/station-activate-form";
-import { Button } from "@/components/ui/button";
+import { ConfirmSubmit } from "@/components/ui/confirm-submit";
 import { FormAlert } from "@/components/ui/form-alert";
 
 export const metadata = { title: "Settings" };
@@ -80,12 +80,13 @@ export default async function SettingsPage() {
                         : ""}
                     </p>
                   </div>
-                  <form action={deactivateStationAction}>
-                    <input type="hidden" name="stationId" value={station.id} />
-                    <Button type="submit" variant="danger">
-                      Deactivate
-                    </Button>
-                  </form>
+                  <ConfirmSubmit
+                    action={deactivateStationAction}
+                    fields={{ stationId: station.id }}
+                    label="Deactivate"
+                    question={`Deactivate "${station.name}"? Guardians can no longer register on it.`}
+                    confirmLabel="Yes, deactivate"
+                  />
                 </li>
               ))}
             </ul>

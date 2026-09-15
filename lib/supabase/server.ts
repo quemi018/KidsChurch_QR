@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 
 import type { Database } from "@/types/database";
 
+import { authCookieOptions } from "./cookie-options";
 import { getPublicSupabaseEnv } from "./env";
 
 /**
@@ -17,6 +18,7 @@ export async function createClient() {
   const cookieStore = await cookies();
 
   return createServerClient<Database>(url, publishableKey, {
+    cookieOptions: authCookieOptions,
     cookies: {
       getAll() {
         return cookieStore.getAll();
