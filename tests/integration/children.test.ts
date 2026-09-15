@@ -47,14 +47,12 @@ describe.skipIf(!hasSupabaseEnv)("children", () => {
   });
 
   it("guardian cannot add a child for someone else", async () => {
-    const { error } = await guardian.client
-      .from("children")
-      .insert({
-        guardian_id: other.id,
-        full_name: "Not Mine",
-        gender: "Female",
-        birthday: "2020-01-01",
-      });
+    const { error } = await guardian.client.from("children").insert({
+      guardian_id: other.id,
+      full_name: "Not Mine",
+      gender: "Female",
+      birthday: "2020-01-01",
+    });
     expect(error?.message).toMatch(/row-level security/i);
   });
 
@@ -135,14 +133,12 @@ describe.skipIf(!hasSupabaseEnv)("children", () => {
   });
 
   it("database rejects a future birthday", async () => {
-    const { error } = await guardian.client
-      .from("children")
-      .insert({
-        guardian_id: guardian.id,
-        full_name: "Future",
-        gender: "Male",
-        birthday: "2099-01-01",
-      });
+    const { error } = await guardian.client.from("children").insert({
+      guardian_id: guardian.id,
+      full_name: "Future",
+      gender: "Male",
+      birthday: "2099-01-01",
+    });
     expect(error?.message).toMatch(/children_birthday_check|check constraint/i);
   });
 });
