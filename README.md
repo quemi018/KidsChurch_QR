@@ -222,6 +222,16 @@ To relax the gate in a future version, flip `STATION_GATE_ENABLED` in
 - **Send QR to Email**: members (dashboard card, QR page) and Admins (child detail) re-send the
   existing QR.
 
+## Kids Church sessions
+
+Attendance is grouped per session (spec §15). From **Admin → Sessions** an Admin opens a
+session (name defaults to "Saturday/Sunday Kids Church", date defaults to today in Manila,
+optional service time), closes it after the service, and can reopen one closed by mistake.
+Only one session can be open at a time — enforced by a partial unique index, surfaced in
+the UI as "A session is already open". The current session (name, date, status, checked-in
+count) appears on the Admin dashboard, the Sessions page and, from Phase 7, the Scanner.
+Open/close/reopen are audit-logged.
+
 ## Build phases
 
 Development follows the phases in `spec.md` §53. Screens scheduled for a later phase
@@ -232,7 +242,7 @@ render a placeholder that names the phase.
 - [x] Phase 3 — Authentication and Registration Station gate
 - [x] Phase 4 — Guardian + children
 - [x] Phase 5 — QR generation and email delivery
-- [ ] Phase 6 — Kids Church sessions
+- [x] Phase 6 — Kids Church sessions
 - [ ] Phase 7 — Scanner + attendance
 - [ ] Phase 8 — Realtime Admin dashboard
 - [ ] Phase 9 — Attendance history

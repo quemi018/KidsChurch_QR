@@ -14,6 +14,7 @@ export type AuditAction =
   | "child_reactivated"
   | "session_opened"
   | "session_closed"
+  | "session_reopened"
   | "attendance_removed";
 
 type AuditEntry = {

@@ -60,10 +60,10 @@ export function formatDateTime(value: DateInput): string {
 }
 
 /**
- * Formats a calendar date (YYYY-MM-DD, e.g. a birthday) as MM/DD/YYYY without
+ * Formats a calendar date (YYYY-MM-DD: birthdays, session dates) as MM/DD/YYYY without
  * time-zone conversion — a date-only value has no instant to convert.
  */
-export function formatBirthday(ymd: string): string {
+export function formatCalendarDate(ymd: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
   if (!match) return ymd;
   const [, year, month, day] = match;

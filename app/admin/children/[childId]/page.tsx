@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { adminResendQrEmailAction } from "@/lib/admin/children-actions";
 import { createClient } from "@/lib/supabase/server";
 import { calculateAge } from "@/lib/utils/age";
-import { formatBirthday, formatDateTime } from "@/lib/utils/datetime";
+import { formatCalendarDate, formatDateTime } from "@/lib/utils/datetime";
 import { formatPhilippineMobile } from "@/lib/validation/phone";
 
 import { ArchiveChildControls } from "@/components/admin/archive-child-controls";
@@ -72,7 +72,7 @@ export default async function AdminChildPage({
             <dt className="text-slate-500">Gender</dt>
             <dd>{child.gender}</dd>
             <dt className="text-slate-500">Birthday</dt>
-            <dd>{formatBirthday(child.birthday)}</dd>
+            <dd>{formatCalendarDate(child.birthday)}</dd>
             <dt className="text-slate-500">Status</dt>
             <dd>{child.is_active ? "Active" : "Archived"}</dd>
             <dt className="text-slate-500">Registered</dt>

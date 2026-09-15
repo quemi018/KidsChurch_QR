@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { requireMember } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { calculateAge } from "@/lib/utils/age";
-import { formatBirthday } from "@/lib/utils/datetime";
+import { formatCalendarDate } from "@/lib/utils/datetime";
 
 import { FormAlert } from "@/components/ui/form-alert";
 
@@ -58,7 +58,7 @@ export default async function ChildPage({
           <dt className="text-slate-500">Gender</dt>
           <dd>{child.gender}</dd>
           <dt className="text-slate-500">Birthday</dt>
-          <dd>{formatBirthday(child.birthday)}</dd>
+          <dd>{formatCalendarDate(child.birthday)}</dd>
           <dt className="text-slate-500">Status</dt>
           <dd>{child.is_active ? "Active" : "Inactive — ask an Admin"}</dd>
         </dl>
