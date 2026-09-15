@@ -72,19 +72,20 @@ proxy fails loudly if they are missing.
 
 ## Scripts
 
-| Command                    | Purpose                                        |
-| -------------------------- | ---------------------------------------------- |
-| `npm run dev`              | Start the dev server                           |
-| `npm run build`            | Production build                               |
-| `npm run start`            | Serve the production build                     |
-| `npm run lint`             | ESLint                                         |
-| `npm run typecheck`        | `tsc --noEmit`                                 |
-| `npm run format`           | Prettier (write)                               |
-| `npm run format:check`     | Prettier (check only, for CI)                  |
-| `npm test`                 | All tests (unit + integration)                 |
-| `npm run test:unit`        | Unit tests only (no network)                   |
-| `npm run test:integration` | Integration tests against the Supabase project |
-| `npm run create-admin`     | Create the first Admin account                 |
+| Command                    | Purpose                                                  |
+| -------------------------- | -------------------------------------------------------- |
+| `npm run dev`              | Start the dev server                                     |
+| `npm run build`            | Production build                                         |
+| `npm run start`            | Serve the production build                               |
+| `npm run lint`             | ESLint                                                   |
+| `npm run typecheck`        | `tsc --noEmit`                                           |
+| `npm run format`           | Prettier (write)                                         |
+| `npm run format:check`     | Prettier (check only, for CI)                            |
+| `npm test`                 | All tests (unit + integration)                           |
+| `npm run test:unit`        | Unit tests only (no network)                             |
+| `npm run test:integration` | Integration tests against the Supabase project           |
+| `npm run create-admin`     | Create the first Admin account                           |
+| `npm run reset-password`   | Reset any account password (no self-service reset in V1) |
 
 ## Project structure
 

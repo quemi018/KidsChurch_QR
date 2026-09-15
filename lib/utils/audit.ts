@@ -8,6 +8,7 @@ export type AuditAction =
   | "admin_created"
   | "admin_activated"
   | "admin_deactivated"
+  | "password_reset"
   | "station_activated"
   | "station_deactivated"
   | "child_archived"
