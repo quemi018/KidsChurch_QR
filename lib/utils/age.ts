@@ -57,3 +57,20 @@ export function calculateAge(birthday: string, asOf: Date = new Date()): number 
   if (birthdayNotYetThisYear) age -= 1;
   return Math.max(0, age);
 }
+
+/**
+ * Whole years between `birthday` and a calendar date `asOfYmd` (both YYYY-MM-DD).
+ * Used for attendance snapshots: age as of the session date (spec §27).
+ */
+export function calculateAgeOn(birthday: string, asOfYmd: string): number {
+  const born = parseYmd(birthday);
+  const asOf = parseYmd(asOfYmd);
+  if (!born) throw new Error(`Invalid birthday: ${birthday}`);
+  if (!asOf) throw new Error(`Invalid date: ${asOfYmd}`);
+
+  let age = asOf.year - born.year;
+  const birthdayNotYetThatYear =
+    asOf.month < born.month || (asOf.month === born.month && asOf.day < born.day);
+  if (birthdayNotYetThatYear) age -= 1;
+  return Math.max(0, age);
+}

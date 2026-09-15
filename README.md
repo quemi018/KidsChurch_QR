@@ -232,6 +232,24 @@ the UI as "A session is already open". The current session (name, date, status, 
 count) appears on the Admin dashboard, the Sessions page and, from Phase 7, the Scanner.
 Open/close/reopen are audit-logged.
 
+## Scanner and check-in
+
+- **Endpoint**: `POST /api/admin/check-in` with `{ "qrPayload": "vckc:…" }` (spec §26). Admin-only
+  (401 otherwise). The pipeline in `lib/attendance/check-in.ts` validates the payload, finds
+  the active child by token, requires an open session, checks for a duplicate, computes the age
+  **as of the session date**, stores the snapshots and inserts as the signed-in Admin under RLS.
+  Outcomes are returned as `status`: `checked_in`, `already_checked_in`, `invalid_qr`,
+  `unknown_qr`, `inactive_child`, `no_open_session`, `unauthorized`, `error`.
+- **Race safety**: two scans of the same child at the same moment produce one row —
+  `UNIQUE(session_id, child_id)` wins and the loser is reported as `already_checked_in`.
+- **Scanner page** (`/admin/scanner`): the USB scanner types into an always-focused input and
+  sends Enter. The console submits on Enter, clears the input, reclaims focus after any click on
+  non-interactive space, ignores an identical payload within 2.5 s (scanner double-fire), queues
+  back-to-back scans, plays a short success/warning/error beep, and shows a large colour-coded
+  LAST SCAN card (§19, §32). A network failure never shows a false success.
+- The current session's attendance table (Date first, newest first) is rendered on load and
+  updated from scan results; Phase 8 adds the Realtime subscription.
+
 ## Build phases
 
 Development follows the phases in `spec.md` §53. Screens scheduled for a later phase
@@ -243,7 +261,7 @@ render a placeholder that names the phase.
 - [x] Phase 4 — Guardian + children
 - [x] Phase 5 — QR generation and email delivery
 - [x] Phase 6 — Kids Church sessions
-- [ ] Phase 7 — Scanner + attendance
+- [x] Phase 7 — Scanner + attendance
 - [ ] Phase 8 — Realtime Admin dashboard
 - [ ] Phase 9 — Attendance history
 - [ ] Phase 10 — Testing and hardening
